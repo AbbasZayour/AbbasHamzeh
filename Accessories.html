@@ -1,0 +1,131 @@
+<title>Accessory Catalog</title>
+  <style>
+    /* Styles for displaying accessories */
+    .accessory-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .accessory-card {
+      border: 1px solid #ddd;
+      padding: 10px;
+      width: 200px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    .accessory-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .accessory-card h3 {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    .accessory-card p {
+      font-size: 14px;
+      color: gray;
+    }
+    .accessory-card .price {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Styling for the search bar */
+    .search-bar {
+      margin: 20px 0;
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+
+
+
+  <h1 style="text-align:center;">Welcome to AbbasPhone Accessories</h1>
+  
+  
+  <input type="text" id="searchInput" class="search-bar" placeholder="Search for an accessory...">
+
+  <div id="accessories" class="accessory-container"></div>
+
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    // Firebase Config
+    var firebaseConfig = {
+      apiKey: "AIzaSyAMuEPDrZj-VTyzNRv22stBpm3UjAG9PSo",
+      authDomain: "abbasphone.firebaseapp.com",
+      projectId: "abbasphone"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
+
+    var accessoriesArray = [];
+
+    function fetchAccessories() {
+      db.collection("accessories").get().then(function(querySnapshot) {
+        accessoriesArray = [];
+        var accessoriesHTML = '';
+
+        querySnapshot.forEach(function(doc) {
+          var accessory = doc.data();
+          accessoriesArray.push(accessory);
+          accessoriesHTML += `
+            <div class="accessory-card">
+              <img src="${accessory.image}" alt="${accessory.name}">
+              <h3>${accessory.name}</h3>
+              <p>${accessory.description}</p>
+              <p class="price">$${accessory.price}</p>
+            </div>
+          `;
+        });
+
+        document.getElementById("accessories").innerHTML = accessoriesHTML;
+
+        if (querySnapshot.empty) {
+          document.getElementById("accessories").innerHTML = "No accessories available.";
+        }
+      }).catch(function(error) {
+        console.log("❌ Error getting accessories: ", error);
+        document.getElementById("accessories").innerHTML = "Failed to load accessories.";
+      });
+    }
+
+    function searchAccessories() {
+      var searchQuery = document.getElementById("searchInput").value.toLowerCase();
+      var filteredAccessories = accessoriesArray.filter(function(accessory) {
+        return accessory.name.toLowerCase().includes(searchQuery);
+      });
+
+      var accessoriesHTML = '';
+      filteredAccessories.forEach(function(accessory) {
+        accessoriesHTML += `
+          <div class="accessory-card">
+            <img src="${accessory.image}" alt="${accessory.name}">
+            <h3>${accessory.name}</h3>
+            <p>${accessory.description}</p>
+            <p class="price">$${accessory.price}</p>
+          </div>
+        `;
+      });
+
+      if (filteredAccessories.length === 0) {
+        accessoriesHTML = "No accessories found for your search.";
+      }
+
+      document.getElementById("accessories").innerHTML = accessoriesHTML;
+    }
+
+    document.getElementById("searchInput").addEventListener("input", searchAccessories);
+
+    fetchAccessories();
+  </script>

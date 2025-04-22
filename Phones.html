@@ -1,0 +1,139 @@
+<title>Phone Catalog</title>
+  <style>
+    /* Simple styles for displaying phones */
+    .phone-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .phone-card {
+      border: 1px solid #ddd;
+      padding: 10px;
+      width: 200px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    .phone-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .phone-card h3 {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    .phone-card p {
+      font-size: 14px;
+      color: gray;
+    }
+    .phone-card .price {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Styling for the search bar */
+    .search-bar {
+      margin: 20px 0;
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+
+
+
+  <h1>Welcome to AbbasPhone Store</h1>
+  
+  
+  <input type="text" id="searchInput" class="search-bar" placeholder="Search for a phone...">
+
+  <div id="phones" class="phone-container"></div>
+
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    // Firebase Config
+    var firebaseConfig = {
+      apiKey: "AIzaSyAMuEPDrZj-VTyzNRv22stBpm3UjAG9PSo",
+      authDomain: "abbasphone.firebaseapp.com",
+      projectId: "abbasphone"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
+
+    // Fetch phones from Firebase
+    var phonesArray = [];
+
+    function fetchPhones() {
+      db.collection("phones").get().then(function(querySnapshot) {
+        console.log("📱 Phones Data:", querySnapshot.docs.length); // Log number of documents
+
+        if (querySnapshot.docs.length === 0) {
+          document.getElementById("phones").innerHTML = "No phones available.";
+          return;
+        }
+
+        phonesArray = []; // Reset the array to store the phones
+        var phonesHTML = '';
+        querySnapshot.forEach(function(doc) {
+          var phone = doc.data();
+          console.log("✅ Phone:", phone); // Log each phone data
+          phonesArray.push(phone); // Store the phone data in the array
+          phonesHTML += `
+            <div class="phone-card">
+              <img src="${phone.image}" alt="${phone.name}">
+              <h3>${phone.name}</h3>
+              <p>${phone.description}</p>
+              <p class="price">$${phone.price}</p>
+            </div>
+          `;
+        });
+        document.getElementById("phones").innerHTML = phonesHTML;
+      }).catch(function(error) {
+        console.log("❌ Error getting documents: ", error);
+        document.getElementById("phones").innerHTML = "Failed to load phones.";
+      });
+    }
+
+    // Function to filter phones based on search query
+    function searchPhones() {
+      var searchQuery = document.getElementById("searchInput").value.toLowerCase();
+      var filteredPhones = phonesArray.filter(function(phone) {
+        return phone.name.toLowerCase().includes(searchQuery); // Search by phone name
+      });
+
+      // Display filtered phones
+      var phonesHTML = '';
+      filteredPhones.forEach(function(phone) {
+        phonesHTML += `
+          <div class="phone-card">
+            <img src="${phone.image}" alt="${phone.name}">
+            <h3>${phone.name}</h3>
+            <p>${phone.description}</p>
+            <p class="price">$${phone.price}</p>
+          </div>
+        `;
+      });
+
+      // If no phones match the search, show a message
+      if (filteredPhones.length === 0) {
+        phonesHTML = "No phones found for your search.";
+      }
+
+      document.getElementById("phones").innerHTML = phonesHTML;
+    }
+
+    // Listen to search input changes
+    document.getElementById("searchInput").addEventListener("input", searchPhones);
+
+    // Initial fetch of phones when the page loads
+    fetchPhones();
+  </script>
